@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-bs-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -12,47 +12,108 @@
 <body class="bg-body-secondary">
     <nav class="navbar navbar-expand-lg bg-dark-subtle rounded-bottom-1">
         <div class="container-fluid">
-            <h1 class="navbar-brandmb-01 h1">Clima WTTR.in</h1>
-            <span class="navbar-text">Consulta de clima usando a API do <a class="link"
-                    href="https://wttr.in">wttr.in</a></span>
+            <h1 class="navbar-brand mb-0 h1">Clima WTTR.in</h1>
+            <span class="navbar-text d-none d-md-inline">Previsão do tempo para qualquer cidade do mundo, usando a API <a class="nav-link" href="http://">wttr.in</a></span>
+            <div class="ms-auto form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="toggle-tema" onchange="alternarTema()">
+                <label class="form-check-label" for="toggle-tema">🌙 Escuro</label>
+            </div>
         </div>
     </nav>
     <div class="container mt-4">
-        <h5 class="card-title mb-1" id="cidade">Carregando...</h5>
-        <div class="display-1 fw-bold" id="temperatura">--°C</div>
-        <div class="fs-4 mb-4" id="descricao"></div>
-        <div class="row text-center">
-            <div class="col">
-                <small class="text-body-secondary">Umidade</small>
-                <div class="fw-semibold" id="umidade">--%</div>
+        <form class="row g-2 mb-4" id="search-form" onsubmit="return buscar(event)">
+            <div class="col-md-4 col-lg-3">
+                <input
+                    type="text"
+                    class="form-control"
+                    id="local-input"
+                    placeholder="Ex: São Paulo, BR"
+                    value=""
+                    autofocus>
             </div>
-
-            <div class="col">
-                <small class="text-body-secondary">Vento</small>
-                <div class="fw-semibold" id="vento">-- km/h</div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary w-100">
+                    Buscar
+                </button>
             </div>
+        </form>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-1" id="cidade">Carregando...</h5>
+                <div class="display-1 fw-bold" id="temperatura">--°C</div>
+                <div class="fs-4 mb-4" id="descricao"></div>
+                <div class="row text-center g-2">
+                    <div class="col">
+                        <div class="border rounded p-3">
+                            <small class="text-body-secondary">Umidade</small>
+                            <div class="fw-semibold fs-5" id="umidade">--%</div>
+                        </div>
+                    </div>
 
-            <div class="col">
-                <small class="text-body-secondary">Sensação</small>
-                <div class="fw-semibold" id="sensacao">--°C</div>
+                    <div class="col">
+                        <div class="border rounded p-3">
+                            <small class="text-body-secondary">Vento</small>
+                            <div class="fw-semibold fs-5" id="vento">-- km/h</div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="border rounded p-3">
+                            <small class="text-body-secondary">Sensação</small>
+                            <div class="fw-semibold fs-5" id="sensacao">--°C</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="card shadow-sm mt-4">
-        <div class="card-header">
-            Próximas 24 horas
+        <div class="card shadow-sm">
+            <div class="card-header">
+                Próximas 24 horas
+            </div>
+
+            <div class="card-body">
+                <div
+                    id="forecast"
+                    class="row row-cols-4 row-cols-sm-6 row-cols-md-8 g-1">
+                </div>
+            </div>
         </div>
 
-        <div class="card-body">
-            <div
-                id="forecast"
-                class="d-flex gap-3 overflow-auto pb-2">
+        <div class="card shadow-sm mt-4 text-center">
+            <div class="card-body py-5">
+                <h3 class="card-title">Fique por dentro do clima</h3>
+                <p class="card-text text-body-secondary mb-4">Receba previsões atualizadas e planeje seu dia com confiança.</p>
+                <a href="https://wttr.in" class="btn btn-lg btn-primary">Saiba Mais</a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4 mb-4" id="contato">
+            <div class="card-header">
+                <h5 class="mb-0">Entre em contato</h5>
+            </div>
+            <div class="card-body">
+                <form id="contato-form" onsubmit="return enviarContato(event)">
+                    <div class="mb-3">
+                        <label for="contato-nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="contato-nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contato-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="contato-email" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                    <div id="contato-feedback" class="mt-3"></div>
+                </form>
             </div>
         </div>
     </div>
     <script>
-async function carregarClima() {
-    const response = await fetch("https://wttr.in/?format=j1&lang=pt-br");
+async function carregarClima(local = "") {
+    const url = local
+        ? `https://wttr.in/${encodeURIComponent(local)}?format=j1&lang=pt-br`
+        : "https://wttr.in/?format=j1&lang=pt-br";
+
+    const response = await fetch(url);
     const json = await response.json();
 
     const atual = json.current_condition[0];
@@ -79,39 +140,104 @@ async function carregarClima() {
     const forecast = document.getElementById("forecast");
     forecast.innerHTML = "";
 
-    // Apenas o dia atual
     json.weather[0].hourly.forEach(item => {
 
         const hora = item.time.padStart(4, "0").replace(/^24/, "00");
 
-        const card = document.createElement("div");
-        card.className = "card text-center flex-shrink-0";
-        card.style.width = "120px";
+        const col = document.createElement("div");
+        col.className = "col";
 
-        card.innerHTML = `
-            <div class="card-body">
-                <div class="fw-semibold mb-2">
-                    ${hora.slice(0,2)}:${hora.slice(2)}
+        col.innerHTML = `
+            <div class="card text-center">
+                <div class="card-body py-2 px-1">
+                    <div class="fw-semibold mb-1">
+                        ${hora.slice(0,2)}:${hora.slice(2)}
+                    </div>
+
+                    <img
+                        src="${item.weatherIconUrl[0].value}"
+                        width="36"
+                        height="36"
+                        alt="Ícone">
+
+                    <div class="fs-6 fw-bold mt-1">
+                        ${item.tempC}°C
+                    </div>
+
+                    <small class="text-body-secondary">
+                        ${item["lang_pt-br"][0].value}
+                    </small>
                 </div>
-
-                <img
-                    src="${item.weatherIconUrl[0].value}"
-                    width="48"
-                    height="48"
-                    alt="Ícone">
-
-                <div class="fs-5 fw-bold mt-2">
-                    ${item.tempC}°C
-                </div>
-
-                <small class="text-body-secondary">
-                    ${item["lang_pt-br"][0].value}
-                </small>
             </div>
         `;
 
-        forecast.appendChild(card);
+        forecast.appendChild(col);
     });
+}
+
+function buscar(event) {
+    event.preventDefault();
+    const local = document.getElementById("local-input").value.trim();
+    if (local) {
+        carregarClima(local);
+    }
+    return false;
+}
+
+function alternarTema() {
+    const html = document.documentElement;
+    const escuro = document.getElementById("toggle-tema").checked;
+    html.setAttribute("data-bs-theme", escuro ? "dark" : "light");
+    document.querySelector("label[for='toggle-tema']").textContent =
+        escuro ? "☀️ Claro" : "🌙 Escuro";
+}
+
+async function enviarContato(event) {
+    event.preventDefault();
+    let nome = document.getElementById("contato-nome").value;
+    let email = document.getElementById("contato-email").value;
+    const feedback = document.getElementById("contato-feedback");
+    feedback.innerHTML = `<div class="alert alert-info">Enviando...</div>`;
+
+    try {
+        const cidade = document.getElementById("local-input").value.trim();
+        const url = `https://wttr.in/${encodeURIComponent(cidade)}?format=j1&lang=pt-br`;
+        const res = await fetch(url);
+        const json = await res.json();
+        const atual = json.current_condition[0];
+        const area = json.nearest_area[0].areaName[0].value;
+
+        const html = `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f5f5f5;border-radius:8px">
+  <h2 style="color:#333">Previsão do Tempo</h2>
+  <table style="width:100%;border-collapse:collapse">
+    <tr><td style="padding:8px;font-weight:bold">Cidade</td><td style="padding:8px">${area}</td></tr>
+    <tr style="background:#fff"><td style="padding:8px;font-weight:bold">Temperatura</td><td style="padding:8px">${atual.temp_C}°C</td></tr>
+    <tr><td style="padding:8px;font-weight:bold">Sensação</td><td style="padding:8px">${atual.FeelsLikeC}°C</td></tr>
+    <tr style="background:#fff"><td style="padding:8px;font-weight:bold">Umidade</td><td style="padding:8px">${atual.humidity}%</td></tr>
+    <tr><td style="padding:8px;font-weight:bold">Vento</td><td style="padding:8px">${atual.windspeedKmph} km/h</td></tr>
+    <tr style="background:#fff"><td style="padding:8px;font-weight:bold">Descrição</td><td style="padding:8px">${atual["lang_pt-br"][0].value}</td></tr>
+  </table>
+</div>`;
+
+        const mailRes = await fetch("https://mail.luanwillianzh04.workers.dev", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                to: email,
+                subject: `Previsão do Tempo - ${area}`,
+                html: html
+            })
+        });
+
+        if (!mailRes.ok) throw new Error("Falha ao enviar email");
+
+        feedback.innerHTML = `<div class="alert alert-success">Mensagem enviada com sucesso!</div>`;
+        document.getElementById("contato-form").reset();
+    } catch (err) {
+        feedback.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+    return false;
 }
 
 carregarClima();
