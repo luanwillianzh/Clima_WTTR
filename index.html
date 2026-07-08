@@ -248,8 +248,14 @@ async function enviarContato(event) {
     }
     return false;
 }
-
-carregarClima();
+let firstLocal = fetch("https://ipinfo.io/json");
+if (!firstLocal.ok) {
+    carregarClima();
+} else {
+    json = firstLocal.json();
+    local_name = json.city;
+    carregarClima(local_name);
+}
 </script>
     <!-- ========== BOOTSTRAP JS ========== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
